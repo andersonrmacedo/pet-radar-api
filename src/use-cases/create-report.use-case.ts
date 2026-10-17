@@ -1,10 +1,28 @@
-import { ReportRepository, CreateReportDTO } from '../repositories/report.repository'
+import { ReportRepository } from '../repositories/report.repository'
+import { UploadService } from '../services/upload.service'
+import { CreateReportInput } from '../validators/report.validator'
 import { Report } from '../types/report.types'
 
-export class CreateReportUseCase {
-  constructor(private reportRepository: ReportRepository) {}
+interface CreateReportRequest extends CreateReportInput {
+  file?: Express.Multer.File
+}
 
-  async execute(data: CreateReportDTO): Promise<Report> {
-    return this.reportRepository.create(data)
+export class CreateReportUseCase {
+  constructor(
+    private reportRepository: ReportRepository,
+    private uploadService: UploadService
+  ) {}
+
+  async execute(data: CreateReportRequest): Promise<Report> {
+    let photo_url: string | undefined
+
+    if (data.file) {
+      photo_url = await this.uploadService.uploadPhoto(
+        data.file.buffer,
+        data.file.mimetype
+      )
+    }
+
+    return this.reportRepository.create({ ...data, photo_url })
   }
 }
