@@ -25,4 +25,9 @@ export class CreateReportUseCase {
 
     return this.reportRepository.create({ ...data, photo_url })
   }
+
+  async findNearby(lat: number, lng: number, radiusKm: number): Promise<Report[]> {
+    const radiusInMeters = radiusKm * 1000
+    return this.reportRepository.findNearby(lat, lng, radiusInMeters)
+  }
 }

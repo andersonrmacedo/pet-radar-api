@@ -56,4 +56,18 @@ export class ReportController {
       return res.status(500).json({ message: "Internal server error" });
     }
   }
+
+  async findNearby(req: Request, res: Response): Promise<void> {
+    const lat = parseFloat(req.query.lat as string)
+    const lng = parseFloat(req.query.lng as string)
+    const radius = parseFloat(req.query.radius as string) || 10
+
+    if (isNaN(lat) || isNaN(lng)) {
+      res.status(400).json({ message: 'lat e lng são obrigatórios' })
+      return
+    }
+
+    const reports = await reportRepository.findNearby(lat, lng, radius * 1000)
+    res.json(reports)
+  }
 }

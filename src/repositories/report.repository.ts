@@ -74,4 +74,25 @@ export class ReportRepository {
     `, [id])
     return result.rows[0] ?? null
   }
+
+  async findNearby(lat: number, lng: number, radiusInMeters: number): Promise<Report[]> {
+    const result = await pool.query<Report>(`
+      SELECT
+        id, type, species, size, color, description, photo_url, name,
+        ST_Y(location::geometry) AS latitude,
+        ST_X(location::geometry) AS longitude,
+        status, contact_name, contact_phone, contact_email,
+        occurred_at, created_at
+      FROM reports
+      WHERE ST_DWithin(
+        location,
+        ST_MakePoint($2, $1)::geography,
+        $3
+      )
+      AND status = 'active'
+      ORDER BY created_at DESC
+    `, [lat, lng, radiusInMeters])
+
+    return result.rows
+  }
 }
