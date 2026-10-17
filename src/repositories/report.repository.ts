@@ -9,6 +9,7 @@ export interface CreateReportDTO {
   description?:  string
   photo_url?:    string
   name?:         string
+  user_id?:      string
   latitude:      number
   longitude:     number
   contact_name:  string
@@ -23,22 +24,23 @@ export class ReportRepository {
       `INSERT INTO reports (
         type, species, size, color, description,
         photo_url, name, location,
-        contact_name, contact_phone, contact_email, occurred_at
+        contact_name, contact_phone, contact_email, occurred_at, user_id
       ) VALUES (
         $1, $2, $3, $4, $5,
         $6, $7, ST_MakePoint($8, $9)::geography,
-        $10, $11, $12, $13
+        $10, $11, $12, $13, $14
       ) RETURNING
         id, type, species, size, color, description,
         photo_url, name, status,
         ST_Y(location::geometry) AS latitude,
         ST_X(location::geometry) AS longitude,
         contact_name, contact_phone, contact_email,
-        occurred_at, created_at`,
+        occurred_at, created_at, user_id`,
       [
         data.type, data.species, data.size, data.color, data.description ?? null,
         data.photo_url ?? null, data.name ?? null, data.longitude, data.latitude,
-        data.contact_name, data.contact_phone, data.contact_email ?? null, data.occurred_at,
+        data.contact_name, data.contact_phone, data.contact_email ?? null,
+        data.occurred_at, data.user_id ?? null,
       ]
     )
     return result.rows[0]

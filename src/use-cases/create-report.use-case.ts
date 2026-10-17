@@ -5,6 +5,7 @@ import { Report } from '../types/report.types'
 
 interface CreateReportRequest extends CreateReportInput {
   file?: Express.Multer.File
+  user_id?: string
 }
 
 export class CreateReportUseCase {

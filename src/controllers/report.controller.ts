@@ -17,6 +17,7 @@ export class ReportController {
       const report = await useCase.execute({
         ...parsed,
         file: req.file,
+        user_id: req.user?.id,
       });
 
       return res.status(201).json(report);

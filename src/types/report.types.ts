@@ -20,4 +20,5 @@ export interface Report {
   contact_email: string | null
   occurred_at:   Date
   created_at:    Date
+  user_id:       string | null
 }
