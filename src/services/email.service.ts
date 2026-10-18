@@ -1,8 +1,8 @@
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
-
 export class EmailService {
+  private resend = new Resend(process.env.RESEND_API_KEY)
+
   async sendMatchNotification(params: {
     toEmail:      string
     toName:       string
@@ -10,7 +10,7 @@ export class EmailService {
     foundAddress: string
     foundPhone:   string
   }): Promise<void> {
-    await resend.emails.send({
+    await this.resend.emails.send({
       from:    'Pet Radar <onboarding@resend.dev>',
       to:      params.toEmail,
       subject: '🐾 Possível match encontrado no Pet Radar!',
