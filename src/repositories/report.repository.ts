@@ -23,22 +23,16 @@ export class ReportRepository {
     const result = await pool.query<Report>(
       `INSERT INTO reports (
         type, species, size, color, description,
-        photo_url, name, location,
+        photo_url, name, latitude, longitude,
         contact_name, contact_phone, contact_email, occurred_at, user_id
       ) VALUES (
         $1, $2, $3, $4, $5,
-        $6, $7, ST_MakePoint($8, $9)::geography,
+        $6, $7, $8, $9,
         $10, $11, $12, $13, $14
-      ) RETURNING
-        id, type, species, size, color, description,
-        photo_url, name, status,
-        ST_Y(location::geometry) AS latitude,
-        ST_X(location::geometry) AS longitude,
-        contact_name, contact_phone, contact_email,
-        occurred_at, created_at, user_id`,
+      ) RETURNING *`,
       [
         data.type, data.species, data.size, data.color, data.description ?? null,
-        data.photo_url ?? null, data.name ?? null, data.longitude, data.latitude,
+        data.photo_url ?? null, data.name ?? null, data.latitude, data.longitude,
         data.contact_name, data.contact_phone, data.contact_email ?? null,
         data.occurred_at, data.user_id ?? null,
       ]
@@ -48,14 +42,7 @@ export class ReportRepository {
 
   async findAll(): Promise<Report[]> {
     const result = await pool.query<Report>(`
-      SELECT
-        id, type, species, size, color, description,
-        photo_url, name, status,
-        ST_Y(location::geometry) AS latitude,
-        ST_X(location::geometry) AS longitude,
-        contact_name, contact_phone, contact_email,
-        occurred_at, created_at
-      FROM reports
+      SELECT * FROM reports
       WHERE status = 'active'
       ORDER BY created_at DESC
     `)
@@ -63,51 +50,36 @@ export class ReportRepository {
   }
 
   async findById(id: string): Promise<Report | null> {
-    const result = await pool.query<Report>(`
-      SELECT
-        id, type, species, size, color, description,
-        photo_url, name, status,
-        ST_Y(location::geometry) AS latitude,
-        ST_X(location::geometry) AS longitude,
-        contact_name, contact_phone, contact_email,
-        occurred_at, created_at
-      FROM reports
-      WHERE id = $1
-    `, [id])
+    const result = await pool.query<Report>(`SELECT * FROM reports WHERE id = $1`, [id])
     return result.rows[0] ?? null
   }
 
-  async findNearby(lat: number, lng: number, radiusInMeters: number): Promise<Report[]> {
-    const result = await pool.query<Report>(`
-      SELECT
-        id, type, species, size, color, description, photo_url, name,
-        ST_Y(location::geometry) AS latitude,
-        ST_X(location::geometry) AS longitude,
-        status, contact_name, contact_phone, contact_email,
-        occurred_at, created_at
-      FROM reports
-      WHERE ST_DWithin(
-        location,
-        ST_MakePoint($2, $1)::geography,
-        $3
-      )
-      AND status = 'active'
-      ORDER BY created_at DESC
-    `, [lat, lng, radiusInMeters])
-
+  async findNearby(latitude: number, longitude: number, radiusMeters: number): Promise<Report[]> {
+    const radiusKm = radiusMeters / 1000
+    const result = await pool.query(
+      `SELECT *,
+        (6371 * acos(
+          cos(radians($1)) * cos(radians(latitude)) *
+          cos(radians(longitude) - radians($2)) +
+          sin(radians($1)) * sin(radians(latitude))
+        )) AS distance_km
+       FROM reports
+       WHERE (
+         6371 * acos(
+           cos(radians($1)) * cos(radians(latitude)) *
+           cos(radians(longitude) - radians($2)) +
+           sin(radians($1)) * sin(radians(latitude))
+         )
+       ) <= $3
+       ORDER BY distance_km`,
+      [latitude, longitude, radiusKm]
+    )
     return result.rows
   }
 
   async findByUserId(userId: string): Promise<Report[]> {
     const result = await pool.query<Report>(`
-      SELECT
-        id, type, species, size, color, description,
-        photo_url, name, status,
-        ST_Y(location::geometry) AS latitude,
-        ST_X(location::geometry) AS longitude,
-        contact_name, contact_phone, contact_email,
-        occurred_at, created_at, user_id
-      FROM reports
+      SELECT * FROM reports
       WHERE user_id = $1
       ORDER BY created_at DESC
     `, [userId])

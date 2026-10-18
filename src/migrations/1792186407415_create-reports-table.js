@@ -1,41 +1,37 @@
 exports.up = (pgm) => {
-  pgm.sql(`
-    CREATE TYPE report_type AS ENUM ('lost', 'found');
-    CREATE TYPE animal_species AS ENUM ('dog', 'cat', 'other');
-    CREATE TYPE animal_size AS ENUM ('small', 'medium', 'large');
-    CREATE TYPE report_status AS ENUM ('active', 'resolved');
+  pgm.createTable('users', {
+    id: { type: 'uuid', primaryKey: true, default: pgm.func('gen_random_uuid()') },
+    name: { type: 'varchar(255)', notNull: true },
+    email: { type: 'varchar(255)', notNull: true, unique: true },
+    password_hash: { type: 'varchar(255)', notNull: true },
+    created_at: { type: 'timestamp', notNull: true, default: pgm.func('NOW()') },
+  })
 
-    CREATE TABLE reports (
-      id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      type        report_type      NOT NULL,
-      species     animal_species   NOT NULL,
-      size        animal_size      NOT NULL,
-      color       VARCHAR(100)     NOT NULL,
-      description TEXT,
-      photo_url   VARCHAR(500),
-      name        VARCHAR(100),
-      location    GEOGRAPHY(Point, 4326) NOT NULL,
-      status      report_status    NOT NULL DEFAULT 'active',
-      contact_name  VARCHAR(200)   NOT NULL,
-      contact_phone VARCHAR(50)    NOT NULL,
-      contact_email VARCHAR(200),
-      occurred_at   TIMESTAMP      NOT NULL,
-      created_at    TIMESTAMP      NOT NULL DEFAULT NOW(),
-      updated_at    TIMESTAMP      NOT NULL DEFAULT NOW()
-    );
+  pgm.createTable('reports', {
+    id: { type: 'uuid', primaryKey: true, default: pgm.func('gen_random_uuid()') },
+    type: { type: 'varchar(10)', notNull: true },
+    species: { type: 'varchar(20)', notNull: true },
+    size: { type: 'varchar(10)', notNull: true },
+    color: { type: 'varchar(100)', notNull: true },
+    description: { type: 'text' },
+    photo_url: { type: 'text' },
+    name: { type: 'varchar(255)' },
+    status: { type: 'varchar(20)', notNull: true, default: 'active' },
+    latitude: { type: 'decimal(10,7)', notNull: true },
+    longitude: { type: 'decimal(10,7)', notNull: true },
+    contact_name: { type: 'varchar(255)', notNull: true },
+    contact_phone: { type: 'varchar(50)', notNull: true },
+    contact_email: { type: 'varchar(255)' },
+    occurred_at: { type: 'timestamp', notNull: true },
+    created_at: { type: 'timestamp', notNull: true, default: pgm.func('NOW()') },
+    user_id: { type: 'uuid', references: '"users"' },
+  })
 
-    CREATE INDEX reports_location_idx ON reports USING GIST (location);
-    CREATE INDEX reports_status_idx   ON reports (status);
-    CREATE INDEX reports_type_idx     ON reports (type);
-  `)
+  pgm.createIndex('reports', 'status')
+  pgm.createIndex('reports', 'type')
 }
 
 exports.down = (pgm) => {
-  pgm.sql(`
-    DROP TABLE IF EXISTS reports;
-    DROP TYPE IF EXISTS report_status;
-    DROP TYPE IF EXISTS animal_size;
-    DROP TYPE IF EXISTS animal_species;
-    DROP TYPE IF EXISTS report_type;
-  `)
+  pgm.dropTable('reports')
+  pgm.dropTable('users')
 }
