@@ -97,4 +97,20 @@ export class ReportRepository {
 
     return result.rows
   }
+
+  async findByUserId(userId: string): Promise<Report[]> {
+    const result = await pool.query<Report>(`
+      SELECT
+        id, type, species, size, color, description,
+        photo_url, name, status,
+        ST_Y(location::geometry) AS latitude,
+        ST_X(location::geometry) AS longitude,
+        contact_name, contact_phone, contact_email,
+        occurred_at, created_at, user_id
+      FROM reports
+      WHERE user_id = $1
+      ORDER BY created_at DESC
+    `, [userId])
+    return result.rows
+  }
 }

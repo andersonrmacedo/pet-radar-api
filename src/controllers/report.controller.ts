@@ -71,4 +71,14 @@ export class ReportController {
     const reports = await reportRepository.findNearby(lat, lng, radius * 1000)
     res.json(reports)
   }
+
+  async findMy(req: Request, res: Response) {
+    try {
+      const reports = await reportRepository.findByUserId(req.user!.id)
+      return res.json(reports)
+    } catch (error) {
+      console.error(error)
+      return res.status(500).json({ message: 'Internal server error' })
+    }
+  }
 }
