@@ -10,7 +10,8 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "migration:create": "node-pg-migrate create --migrations-dir src/migrations",
-    "migration:up": "node-pg-migrate up --migrations-dir src/migrations --database-url-var DATABASE_URL"
+    "migration:up": "node-pg-migrate up --migrations-dir src/migrations --database-url-var DATABASE_URL",
+    "migrate": "node-pg-migrate up --migrations-dir src/migrations --database-url-var DATABASE_URL"
   },
   "keywords": [],
   "author": "",
