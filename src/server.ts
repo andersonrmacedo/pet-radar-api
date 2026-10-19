@@ -1,8 +1,10 @@
 import 'dotenv/config'
 import app from './app'
+import { startExpireReportsJob } from './jobs/expireReports'
 
 const PORT = process.env.PORT ?? 3333
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
+  startExpireReportsJob()
 })
