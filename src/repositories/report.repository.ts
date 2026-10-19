@@ -71,6 +71,7 @@ export class ReportRepository {
            sin(radians($1)) * sin(radians(latitude))
          )
        ) <= $3
+       AND status = 'active'
        ORDER BY distance_km`,
       [latitude, longitude, radiusKm]
     )
@@ -81,8 +82,13 @@ export class ReportRepository {
     const result = await pool.query<Report>(`
       SELECT * FROM reports
       WHERE user_id = $1
+      AND status = 'active'
       ORDER BY created_at DESC
     `, [userId])
     return result.rows
+  }
+
+  async updateStatus(id: string, status: string): Promise<void> {
+    await pool.query(`UPDATE reports SET status = $1 WHERE id = $2`, [status, id])
   }
 }

@@ -81,4 +81,15 @@ export class ReportController {
       return res.status(500).json({ message: 'Internal server error' })
     }
   }
+
+  async resolve(req: Request, res: Response) {
+    const reportId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id
+    const report = await reportRepository.findById(reportId)
+
+    if (!report) return res.status(404).json({ message: 'Report not found' })
+    if (report.user_id !== req.user?.id) return res.status(403).json({ message: 'Forbidden' })
+
+    await reportRepository.updateStatus(reportId, 'resolved')
+    return res.json({ message: 'Resolvido!' })
+  }
 }
